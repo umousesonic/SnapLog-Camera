@@ -1,4 +1,8 @@
 #include <Arduino.h>
+#include "esp_camera.h"
+#include <WiFi.h>
+#include "soc/soc.h"
+#include "camera.h"
 
 // put function declarations here:
 int myFunction(int, int);
