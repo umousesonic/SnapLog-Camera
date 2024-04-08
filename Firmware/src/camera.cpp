@@ -6,7 +6,9 @@
 #include "camera.h"
 
 
-Camera::Camera() {}
+Camera::Camera() {
+    init();
+}
 
 
 void Camera::init() {
