@@ -5,7 +5,7 @@
 #include "camera.h"
 
 
-#define SLEEP_TIME 20
+#define SLEEP_TIME 20             // seconds
 #define uS_TO_S_FACTOR 1000000  
 // put declarations here:
 Camera *cam;
