@@ -22,9 +22,9 @@ class Datapacket:
 
 
 class Ackpacket:
-    # def __init__(self) -> None:
-    #     self.fmt = Struct('H')
-    #     self.id = None
+    def __init__(self) -> None:
+        self.fmt = Struct('H')
+        self.id = None
     
     def __init__(self, id) -> None:
         self.fmt = Struct('H')

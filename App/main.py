@@ -5,10 +5,13 @@ from packet import *
 import base64
 from PIL import Image
 from io import BytesIO
+from datetime import datetime
+from os import path
 
 
 
 CAMERA_UUID = 'somethign'
+IMG_PATH = 'img'
 
 async def blefilter(device, data: AdvertisementData) -> bool:
     if CAMERA_UUID in data.service_uuids:
@@ -28,14 +31,17 @@ async def packet_handler(client):
             break
     return packets
 
-def convert_image(packets):
-    all_data = b''.join(packet.data for packet in packets)
-    decoded_data = base64.b85decode(all_data)
-    image = Image.open(BytesIO(decoded_data))
+def save_img(packets):
+    filename = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    filename += '.jpg'
+    if path.isfile(filename):
+        print(f'Warning: {filename} exists. Skipping.')
+        return False
+    with open(filename, '+w') as f:
+        for i in packets:
+            f.write(i.data)
     
-    # We have to save our image in the folder with different name
-    # using counter or time?
-    # TODO
+    return True
 
 
 async def main():
@@ -44,12 +50,8 @@ async def main():
 
     if device:
         async with BleakClient(device) as client:
-            # pass
-            # TODO
-            # model_number = await client.read_gatt_char(MODEL_NBR_UUID)
-            # print("Model Number: {0}".format("".join(map(chr, model_number))))
             packets = await packet_handler(client)
-            convert_image(packets)
+            save_img(packets)
     else:
         print("No device found.")
 
