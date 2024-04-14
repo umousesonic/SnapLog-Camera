@@ -2,7 +2,9 @@
 #include <BLEUtils.h>
 #include <BLEServer.h>
 #include <BLE2902.h>
-#include "datapkt.h"
+#include <Arduino.h>
+
+#include "bleserver.h"
 
 BLEServer *pServer = NULL;
 BLECharacteristic *pTxCharacteristic, *pRxCharacteristic;
@@ -30,9 +32,9 @@ class MyServerCallbacks: public BLEServerCallbacks {
 class MyCallbacks: public BLECharacteristicCallbacks {
     void onWrite(BLECharacteristic *pCharacteristic) override {
         if (pCharacteristic == pRxCharacteristic) {
-            std::string rxValue = pCharacteristic->getValue();
-            if (rxValue.length() >= 2) {
-                id = rxValue;
+            uint16_t *rxValue = (uint16_t*)pCharacteristic->getData();
+            if (rxValue != NULL) {
+                id = *(rxValue);
             }
         }
     }
@@ -62,7 +64,7 @@ static void initializeBLE() {
     pServer->getAdvertising()->start();
 }
 
-static bool process_function(size_t width, size_t height, pixformat_t format, uint8_t* buf, size_t len) {
+bool process_function(size_t width, size_t height, pixformat_t format, uint8_t* buf, size_t len) {
     // Init server
     if (!pServer) {
         initializeBLE();
@@ -71,8 +73,8 @@ static bool process_function(size_t width, size_t height, pixformat_t format, ui
     datapkt_t packet;
 
     unsigned long startTime = millis();
-    while (!deviceConnected || ack == 0xFFFF) {
-        if (millis() - startTime > 10000) { // 10 seconds timeout
+    while (!deviceConnected) {
+        if (millis() - startTime > 60000) { // 10 seconds timeout
             Serial.println("Timeout waiting for client ack.");
             return false; // go back to sleep
         }
@@ -86,16 +88,18 @@ static bool process_function(size_t width, size_t height, pixformat_t format, ui
             packet.data_size = PACKET_MAX_DATA;
             packet.id = id;
             packet.total = totalPackets;
-            packet.data = (buf + id*PACKET_MAX_DATA);
+            packet.data = (uint8_t (*)[PACKET_MAX_DATA])(buf + id*PACKET_MAX_DATA);
         }
         else {
             packet.data_size = len - id*PACKET_MAX_DATA;
-            packet.pktsize = data_size + sizeof(datapkt_t) - PACKET_MAX_DATA;
+            packet.pktsize = packet.data_size + sizeof(datapkt_t) - PACKET_MAX_DATA;
             packet.id = id;
             packet.total = totalPackets;
-            packet.data = (buf + id*PACKET_MAX_DATA);
+            packet.data = (uint8_t (*)[PACKET_MAX_DATA])(buf + id*PACKET_MAX_DATA);
         }
-        Serial.write("Setting tx to packet " + std::to_string(id) + "\n");
+        Serial.write("Setting tx to packet ");
+        Serial.write(std::to_string(id).c_str());
+        Serial.write("\n");
         pTxCharacteristic->setValue((uint8_t*)&packet, packet.pktsize);
         pTxCharacteristic->notify();
         delay(10); // Prevent BLE congestion
@@ -105,3 +109,4 @@ static bool process_function(size_t width, size_t height, pixformat_t format, ui
 
     return true;
 }
+

@@ -3,7 +3,7 @@
 #include <WiFi.h>
 #include "soc/soc.h"
 #include "camera.h"
-
+#include "bleserver.h"
 
 #define SLEEP_TIME 20             // seconds
 #define uS_TO_S_FACTOR 1000000  
@@ -17,7 +17,7 @@ void setup() {
   delay(1000); //Take some time to open up the Serial Monitor
   
   cam = new Camera();
-  cam->capture(TODO)
+  cam->capture(process_function);
 
   // ++bootCount;
   // Serial.println("Boot number: " + String(bootCount));

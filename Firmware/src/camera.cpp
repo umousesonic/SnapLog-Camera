@@ -13,8 +13,8 @@ Camera::Camera() {
 
 void Camera::init() {
     camera_config_t config;
-    // config.ledc_channel =   CameraPin::LEDC_CHANNEL_0;
-    // config.ledc_timer =     CameraPin::LEDC_TIMER_0;
+    config.ledc_channel =   LEDC_CHANNEL_0;
+    config.ledc_timer =     LEDC_TIMER_0;
     config.pin_d0 =         CameraPin::Y2_GPIO_NUM;
     config.pin_d1 =         CameraPin::Y3_GPIO_NUM;
     config.pin_d2 =         CameraPin::Y4_GPIO_NUM;
@@ -32,13 +32,13 @@ void Camera::init() {
     config.pin_pwdn =       CameraPin::PWDN_GPIO_NUM;
     config.pin_reset =      CameraPin::RESET_GPIO_NUM;
     config.xclk_freq_hz = 20000000;
-    config.frame_size = FRAMESIZE_UXGA;
+    config.frame_size = FRAMESIZE_VGA;
     config.pixel_format = PIXFORMAT_JPEG;
     config.grab_mode = CAMERA_GRAB_WHEN_EMPTY;
     config.fb_location = CAMERA_FB_IN_PSRAM;
 
     // Set picture quality and buffer mode
-    config.jpeg_quality = 4;    // Highest possible quality
+    config.jpeg_quality = 10;    // Highest possible quality
     config.fb_count = 1;    // No need for higher frame rate, this is fine and will cost less cpu
     config.grab_mode = CAMERA_GRAB_LATEST;
 
