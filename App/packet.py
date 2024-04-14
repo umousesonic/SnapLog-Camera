@@ -2,7 +2,7 @@ from struct import Struct
 
 class Datapacket:
     def __init__(self):
-        self.fmt = Struct('BHHHHp')
+        self.fmt = Struct('<B4H500s')
         self.magic = None
         self.pktsize = None
         self.datasize = None
@@ -23,11 +23,11 @@ class Datapacket:
 
 class Ackpacket:
     def __init__(self) -> None:
-        self.fmt = Struct('H')
+        self.fmt = Struct('<H')
         self.id = None
     
     def __init__(self, id) -> None:
-        self.fmt = Struct('H')
+        self.fmt = Struct('<H')
         self.id = id
 
     def set_id(self, id):

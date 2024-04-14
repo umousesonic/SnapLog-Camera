@@ -2,31 +2,49 @@ import asyncio
 from bleak import BleakClient, BleakScanner
 from bleak.backends.scanner import AdvertisementData
 from packet import *
-import base64
-from PIL import Image
-from io import BytesIO
 from datetime import datetime
 from os import path
+import time
 
 
 
-CAMERA_UUID = 'somethign'
+CAMERA_SERVICE_UUID = "018ed48a-a65c-718d-a58e-dae287ec41fd" 
+IMAGE_CHAR_UUID = "018ed48c-1ea0-73d5-ab67-af89e0d89179"
+ACK_CHAR_UUID = "018ed48d-2f98-76de-bf56-ef87e9d89281"
 IMG_PATH = 'img'
 
-async def blefilter(device, data: AdvertisementData) -> bool:
-    if CAMERA_UUID in data.service_uuids:
+def blefilter(device, data: AdvertisementData) -> bool:
+    # print(data.service_uuids)
+
+    if CAMERA_SERVICE_UUID in data.service_uuids:
         return True
     return False
 
 async def packet_handler(client):
     packets = []
+    # service = client.get_service(CAMERA_SERVICE_UUID)
+    image_char = None
+    ack_char = None
+    
+    # services = await client.get_services()
+    for s in client.services:
+        # print(s.uuid)
+        if s.uuid == CAMERA_SERVICE_UUID:
+            print('Found service')
+            image_char = s.get_characteristic(IMAGE_CHAR_UUID)
+            ack_char = s.get_characteristic(ACK_CHAR_UUID)
+        
+    
     while True:
-        packet_bin = await client.read_gatt_char(CAMERA_UUID)
+        packet_bin = await client.read_gatt_char(image_char)
         packet = Datapacket()
+        print(f"Data looks like {packet_bin}, len={len(packet_bin)}")
         packet.from_bin(packet_bin)
         packets.append(packet)
+        print(f"Got datapacket id={packet.id}")
         ack = Ackpacket(packet.id)
-        await client.write_gatt_char(CAMERA_UUID, ack.get_bin())
+        await client.write_gatt_char(ack_char, ack.get_bin())
+        time.sleep(0.1)
         if packet.id == packet.totalpkts:
             break
     return packets
@@ -46,10 +64,13 @@ def save_img(packets):
 
 async def main():
     scanner = BleakScanner()
-    device = await scanner.find_device_by_filter(blefilter)
+    print("Finding device")
 
+    device = await scanner.find_device_by_filter(blefilter)
+    
     if device:
         async with BleakClient(device) as client:
+            print("Connected to device.")
             packets = await packet_handler(client)
             save_img(packets)
     else:
