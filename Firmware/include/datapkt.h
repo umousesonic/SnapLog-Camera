@@ -1,7 +1,7 @@
-# define PACKET_MAX_DATA 500
+# define PACKET_MAX_DATA (uint16_t)500
 
 typedef struct datapkt_s {
-    uint8_t magic;
+    unsigned magic;
     uint16_t pktsize;
     uint16_t data_size;
     uint16_t id;
@@ -10,6 +10,6 @@ typedef struct datapkt_s {
     // uint8_t (*pktdata)[PACKET_MAX_DATA];
     uint8_t pktdata[PACKET_MAX_DATA];
 
-    datapkt_s() : magic(0xAB) {}
+    datapkt_s() : magic(0xABCDEFEF) {}
 } datapkt_t;
 

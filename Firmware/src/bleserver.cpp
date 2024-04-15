@@ -10,6 +10,7 @@ BLEServer *pServer = NULL;
 BLECharacteristic *pTxCharacteristic, *pRxCharacteristic;
 bool deviceConnected = false;
 static uint16_t pkt_id = 0x0000; // Initialize to 0
+static datapkt_t packet;
 
 // https://www.uuidgenerator.net/version7
 #define SERVICE_UUID           "018ed48a-a65c-718d-a58e-dae287ec41fd"  
@@ -36,9 +37,9 @@ class MyCallbacks: public BLECharacteristicCallbacks {
             if (rxValue != NULL) {
                 pkt_id = *(rxValue) + 1;
                 // pkt_id = (rxValue[0]<<8 | rxValue[1]) + 1;
-                Serial.write("Setting tx to packet ");
-                Serial.write(std::to_string(pkt_id).c_str());
-                Serial.write("\n");
+                // Serial.write("Setting tx to packet ");
+                // Serial.write(std::to_string(pkt_id).c_str());
+                // Serial.write("\n");
             }
         }
     }
@@ -78,7 +79,7 @@ bool process_function(size_t width, size_t height, pixformat_t format, uint8_t* 
         initializeBLE();
     }
 
-    datapkt_t packet;
+    
 
     unsigned long startTime = millis();
     while (!deviceConnected) {
@@ -93,27 +94,31 @@ bool process_function(size_t width, size_t height, pixformat_t format, uint8_t* 
     Serial.write("Total packets=");
     Serial.write(std::to_string(totalPackets).c_str());
     Serial.write("\n");
+    
     while(deviceConnected) {
         if (pkt_id != totalPackets) {
-            packet.pktsize = PACKET_MAX_DATA + 9;
+
+            packet.pktsize = PACKET_MAX_DATA + 12;
             packet.data_size = PACKET_MAX_DATA;
             packet.id = pkt_id;
             packet.total = totalPackets;
-            memcpy(&packet.pktdata, (uint8_t*)(buf + pkt_id*PACKET_MAX_DATA), packet.data_size);
             // packet.pktdata = (uint8_t (*)[PACKET_MAX_DATA]);
+            memcpy(packet.pktdata, (uint8_t*)(buf + pkt_id*PACKET_MAX_DATA), packet.data_size);
+
+            
         }
         else {
-            packet.data_size = len - pkt_id*PACKET_MAX_DATA;
-            packet.pktsize = packet.data_size + PACKET_MAX_DATA + 9 - PACKET_MAX_DATA;
+            packet.data_size = len - (pkt_id-1)*PACKET_MAX_DATA;
+            packet.pktsize = packet.data_size + PACKET_MAX_DATA + 12 - PACKET_MAX_DATA;
             packet.id = pkt_id;
             packet.total = totalPackets;
             // packet.pktdata = (uint8_t (*)[PACKET_MAX_DATA])(buf + pkt_id*PACKET_MAX_DATA);
-            memcpy(&packet.pktdata, (uint8_t*)(buf + pkt_id*PACKET_MAX_DATA), packet.data_size);
+            memcpy(packet.pktdata, (uint8_t*)(buf + pkt_id*PACKET_MAX_DATA), packet.data_size);
         }
         
         pTxCharacteristic->setValue((uint8_t*)&packet, packet.pktsize);
         pTxCharacteristic->notify();
-        delay(10); // Prevent BLE congestion
+        // delay(10); // Prevent BLE congestion
     }
     Serial.write("Device disconnected. Returning.\n");
 

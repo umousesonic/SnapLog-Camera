@@ -1,8 +1,8 @@
-from struct import Struct
+from struct import Struct, unpack
 
 class Datapacket:
     def __init__(self):
-        self.fmt = Struct('<B4H500s')
+        self.fmt = Struct('<I4H')
         self.magic = None
         self.pktsize = None
         self.datasize = None
@@ -12,13 +12,15 @@ class Datapacket:
         
 
     def from_bin(self, bin):
-        res = self.fmt.unpack(bin)
+
+        res = self.fmt.unpack(bin[0:12])
         self.magic = res[0]
         self.pktsize = res[1]
         self.datasize = res[2]
         self.id = res[3]
         self.totalpkts = res[4]
-        self.data = res[5]
+
+        self.data = bin[12:]
 
 
 class Ackpacket:

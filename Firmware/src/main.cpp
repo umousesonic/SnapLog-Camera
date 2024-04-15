@@ -14,7 +14,7 @@ RTC_DATA_ATTR int bootCount = 0;
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
-  delay(1000); //Take some time to open up the Serial Monitor
+  // delay(1000); //Take some time to open up the Serial Monitor
   
   cam = new Camera();
   cam->capture(process_function);

@@ -3,7 +3,7 @@ from bleak import BleakClient, BleakScanner
 from bleak.backends.scanner import AdvertisementData
 from packet import *
 from datetime import datetime
-from os import path
+from os import path, makedirs
 import time
 
 
@@ -38,13 +38,12 @@ async def packet_handler(client):
     while True:
         packet_bin = await client.read_gatt_char(image_char)
         packet = Datapacket()
-        print(f"Data looks like {packet_bin}, len={len(packet_bin)}")
+        # print(f"Data looks like {packet_bin}, len={len(packet_bin)}")
         packet.from_bin(packet_bin)
         packets.append(packet)
         print(f"Got datapacket id={packet.id}")
         ack = Ackpacket(packet.id)
         await client.write_gatt_char(ack_char, ack.get_bin())
-        time.sleep(0.1)
         if packet.id == packet.totalpkts:
             break
     return packets
@@ -55,7 +54,9 @@ def save_img(packets):
     if path.isfile(filename):
         print(f'Warning: {filename} exists. Skipping.')
         return False
-    with open(filename, '+w') as f:
+    if not path.exists(IMG_PATH): 
+        makedirs(IMG_PATH) 
+    with open(IMG_PATH+'/'+filename, '+wb') as f:
         for i in packets:
             f.write(i.data)
     
