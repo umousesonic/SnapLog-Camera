@@ -1,5 +1,6 @@
 import asyncio
 from bleak import BleakClient, BleakScanner
+from bleak.exc import BleakError 
 from bleak.backends.scanner import AdvertisementData
 from packet import *
 from datetime import datetime
@@ -64,18 +65,26 @@ def save_img(packets):
 
 
 async def main():
-    scanner = BleakScanner()
-    print("Finding device")
+    while True:
+        scanner = BleakScanner()
+        print("Finding device")
+        
+        device = None
+        while device is None:
+            device = await scanner.find_device_by_filter(blefilter)
 
-    device = await scanner.find_device_by_filter(blefilter)
-    
-    if device:
-        async with BleakClient(device) as client:
-            print("Connected to device.")
-            packets = await packet_handler(client)
-            save_img(packets)
-    else:
-        print("No device found.")
+        
+        if device:
+            try:
+                async with BleakClient(device) as client:
+                    print("Connected to device.")
+                    packets = await packet_handler(client)
+                    save_img(packets)
+                    print("Saving image")
+            except BleakError as e:
+                print(e)
+        else:
+            print("No device found.")
 
 
 if __name__ == '__main__':

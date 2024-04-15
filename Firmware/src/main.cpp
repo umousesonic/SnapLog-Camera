@@ -5,7 +5,7 @@
 #include "camera.h"
 #include "bleserver.h"
 
-#define SLEEP_TIME 20             // seconds
+#define SLEEP_TIME 5             // seconds
 #define uS_TO_S_FACTOR 1000000  
 // put declarations here:
 Camera *cam;
@@ -16,24 +16,27 @@ void setup() {
   Serial.begin(115200);
   // delay(1000); //Take some time to open up the Serial Monitor
   
-  cam = new Camera();
-  cam->capture(process_function);
+  // cam = new Camera();
+  // cam->capture(process_function);
 
-  // ++bootCount;
-  // Serial.println("Boot number: " + String(bootCount));
+  ++bootCount;
+  Serial.println("Boot number: " + String(bootCount));
 
-  // esp_sleep_wakeup_cause_t wakeup_reason;
-  // wakeup_reason = esp_sleep_get_wakeup_cause();
-  // switch(wakeup_reason){
-  //   case ESP_SLEEP_WAKEUP_TIMER : Serial.println("Wakeup caused by timer"); 
-  //   cam = new Camera();
-  //   // cam->capture(TODO);
-  //   break;
-  //   default : Serial.printf("Wakeup was not caused by deep sleep: %d\n",wakeup_reason); break;
-  // }
+  esp_sleep_wakeup_cause_t wakeup_reason;
+  wakeup_reason = esp_sleep_get_wakeup_cause();
+  switch(wakeup_reason){
+    case ESP_SLEEP_WAKEUP_TIMER : Serial.println("Wakeup caused by timer"); 
+    cam = new Camera();
+    cam->capture(process_function);
+    break;
+    default : Serial.printf("Wakeup was not caused by deep sleep: %d\n",wakeup_reason); break;
+  }
 
-  // esp_sleep_enable_timer_wakeup(SLEEP_TIME * uS_TO_S_FACTOR);
-  // Serial.println("Setup ESP32 to sleep for every " + String(SLEEP_TIME) + " Seconds");
+  esp_sleep_enable_timer_wakeup(SLEEP_TIME * uS_TO_S_FACTOR);
+  Serial.println("Setup ESP32 to sleep for every " + String(SLEEP_TIME) + " Seconds");
+  Serial.println("Going to sleep now");
+  Serial.flush(); 
+  esp_deep_sleep_start();
 }
 
 void loop() {// This code will never run  
