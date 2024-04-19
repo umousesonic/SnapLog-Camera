@@ -6,12 +6,16 @@
 #include "bleserver.h"
 #include <esp_bt.h>
 #include "driver/adc.h"
+#include "global.h"
 
-#define SLEEP_TIME 10             // seconds
+// #define SLEEP_TIME 10             // seconds
 #define uS_TO_S_FACTOR 1000000  
 // put declarations here:
 Camera *cam;
 RTC_DATA_ATTR int bootCount = 0;
+uint32_t wake_interval = 20; 
+
+
 
 void setup() {
   // put your setup code here, to run once:
@@ -34,8 +38,8 @@ void setup() {
     break;
   }
 
-  esp_sleep_enable_timer_wakeup(SLEEP_TIME * uS_TO_S_FACTOR);
-  Serial.println("Setup ESP32 to sleep for every " + String(SLEEP_TIME) + " Seconds");
+  esp_sleep_enable_timer_wakeup(wake_interval * uS_TO_S_FACTOR);
+  Serial.println("Setup ESP32 to sleep for every " + String(wake_interval) + " Seconds");
   Serial.println("Going to sleep now");
   Serial.flush(); 
   cam->poweroff();
