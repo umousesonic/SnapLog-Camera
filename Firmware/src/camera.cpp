@@ -108,11 +108,13 @@ bool Camera::capture(bool (&process_function)(size_t, size_t, pixformat_t, uint8
 
 void Camera::poweroff() {
     // gpio_set_level((gpio_num_t)CameraPin::PWDN_GPIO_NUM, 1);
+    if (CameraPin::PWDN_GPIO_NUM < 0) return;
     digitalWrite(CameraPin::PWDN_GPIO_NUM, HIGH);
     gpio_hold_en((gpio_num_t)CameraPin::PWDN_GPIO_NUM);
 }
 
 void Camera::poweron() {
+    if (CameraPin::PWDN_GPIO_NUM < 0) return;
     gpio_hold_dis((gpio_num_t)CameraPin::PWDN_GPIO_NUM);
     digitalWrite(CameraPin::PWDN_GPIO_NUM, LOW);
     // digitalWrite(CameraPin::RESET_GPIO_NUM, LOW);
