@@ -103,3 +103,7 @@ bool Camera::capture(bool (&process_function)(size_t, size_t, pixformat_t, uint8
     esp_camera_fb_return(fb);
     return result;
 }
+
+void Camera::poweroff() {
+    gpio_set_level((gpio_num_t)CameraPin::PWDN_GPIO_NUM, 1);
+}
