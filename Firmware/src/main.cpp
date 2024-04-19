@@ -7,7 +7,7 @@
 #include <esp_bt.h>
 #include "driver/adc.h"
 
-#define SLEEP_TIME 60             // seconds
+#define SLEEP_TIME 10             // seconds
 #define uS_TO_S_FACTOR 1000000  
 // put declarations here:
 Camera *cam;
@@ -17,9 +17,7 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
   // delay(1000); //Take some time to open up the Serial Monitor
-  
-  // cam = new Camera();
-  // cam->capture(process_function);
+
 
   ++bootCount;
   Serial.println("Boot number: " + String(bootCount));
@@ -30,6 +28,7 @@ void setup() {
     default : Serial.printf("Wakeup was not caused by deep sleep: %d\n",wakeup_reason); break;
     case ESP_SLEEP_WAKEUP_TIMER : Serial.println("Wakeup caused by timer"); 
     esp_wifi_bt_power_domain_on();
+    cam->poweron();
     cam = new Camera();
     cam->capture(process_function);
     break;
@@ -40,7 +39,6 @@ void setup() {
   Serial.println("Going to sleep now");
   Serial.flush(); 
   cam->poweroff();
-  adc_power_off();
   esp_wifi_bt_power_domain_off();
   esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH,   ESP_PD_OPTION_OFF);
   esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_SLOW_MEM, ESP_PD_OPTION_OFF);

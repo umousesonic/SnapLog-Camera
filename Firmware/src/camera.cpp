@@ -12,6 +12,8 @@ Camera::Camera() {
 
 
 void Camera::init() {
+    // poweron();
+    // delay(1000);
     camera_config_t config;
     config.ledc_channel =   LEDC_CHANNEL_0;
     config.ledc_timer =     LEDC_TIMER_0;
@@ -105,5 +107,15 @@ bool Camera::capture(bool (&process_function)(size_t, size_t, pixformat_t, uint8
 }
 
 void Camera::poweroff() {
-    gpio_set_level((gpio_num_t)CameraPin::PWDN_GPIO_NUM, 1);
+    // gpio_set_level((gpio_num_t)CameraPin::PWDN_GPIO_NUM, 1);
+    digitalWrite(CameraPin::PWDN_GPIO_NUM, HIGH);
+    gpio_hold_en((gpio_num_t)CameraPin::PWDN_GPIO_NUM);
+}
+
+void Camera::poweron() {
+    gpio_hold_dis((gpio_num_t)CameraPin::PWDN_GPIO_NUM);
+    digitalWrite(CameraPin::PWDN_GPIO_NUM, LOW);
+    // digitalWrite(CameraPin::RESET_GPIO_NUM, LOW);
+    // delay(20);
+    // digitalWrite(CameraPin::RESET_GPIO_NUM, HIGH);
 }
