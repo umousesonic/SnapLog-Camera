@@ -38,5 +38,17 @@ class Ackpacket:
     def get_bin(self):
         return self.fmt.pack(self.id)
     
+
+# class time_setting:
+#     def __init__(self, timing) -> None:
+#         self.fmt = Struct('<I')
+#         self.timing = timing
+
+#     def set_timing(self, timing):
+#         self.timing = timing
+    
+#     def get_timing(self):
+#         return self.fmt.pack(self.timing)
+    
     
 

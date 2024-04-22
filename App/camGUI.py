@@ -13,6 +13,7 @@ from kivy.uix.textinput import TextInput
 import os
 import subprocess
 from datetime import datetime
+from share_queue import shared_queue
 
 
 class PictureCaptureApp(App):
@@ -64,17 +65,21 @@ class PictureCaptureApp(App):
             # Convert input text to integer
             user_input = int(self.timing_input.text)
             # Check if the input is in the correct range
-            if 0 <= user_input <= 30:
-                self.message_label.text = f"Setting capture time to {user_input} minutes."
+            if 1 <= user_input <= 5:
+                global shared_queue
+                self.message_label.text = f"Setting capture time to {user_input} minutes in process..."
+                if not shared_queue.full():
+                    shared_queue.put(user_input)
             else:
-                self.message_label.text = "Invalid input. Please enter a number between 0 and 30."
+                self.message_label.text = "Invalid input. Please enter a number between 1 and 5."
         except ValueError:
             # Handle the case where the input is not an integer
             self.message_label.text = "Invalid input. Please enter a whole number."
 
     # Callback function to handle the 'Create Video' button press
     def create_video(self, instance):
-        print("Converting today's video...")
+        self.message_label.text = ''
+        self.message_label.text = f"creating video now..."
         # Get today's date in the desired format (YYYY-MM-DD)
         today_date = datetime.now().strftime('%Y-%m-%d')
 
@@ -95,5 +100,3 @@ class PictureCaptureApp(App):
         # subprocess.run(command_list, cwd=today_folder_path)
         subprocess.run(command_list, cwd=base_folder_path)
 
-# def open_GUI():
-# PictureCaptureApp().run()
