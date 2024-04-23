@@ -8,7 +8,7 @@ from os import path, makedirs
 import time
 from camGUI import PictureCaptureApp
 import threading
-from share_queue import shared_queue
+from share_queue import cmd_queue
 import struct
 # once found the device, we set this global for other function to use
 # temp = time_interval
@@ -28,7 +28,7 @@ def blefilter(device, data: AdvertisementData) -> bool:
     return False
 
 
-async def packet_handler(client, new_time_interval=None):
+async def packet_handler(client):
     packets = []
     # service = client.get_service(CAMERA_SERVICE_UUID)
     image_char = None
@@ -60,10 +60,12 @@ async def packet_handler(client, new_time_interval=None):
     await client.write_gatt_char(ack_char, ack.get_bin())
 
     # Apply new settings
-    if new_time_interval is not None:
-        # TODO
-        # Here you would normally set the time interval on the device
-        await client.write_gatt_char(time_char, struct.pack('<I', new_time_interval))
+    # Check queue
+    while not cmd_queue.empty():
+        pkt = cmd_queue.get()
+        await client.write_gatt_char(time_char, pkt.get_bin())
+        
+    
 
     return packets
 
@@ -84,7 +86,7 @@ def save_img(packets):
 
 def bluetooth_task():
     async def run_ble_operations():
-        global shared_queue
+        global cmd_queue
         new_time_interval = None
         
         while True:
@@ -101,13 +103,14 @@ def bluetooth_task():
                         async with BleakClient(device) as client:
                             print("Connected to device.")
                             # Attempt to get the new time interval if available
-                            packets = None
-                            if not shared_queue.empty():
-                                new_time_interval = shared_queue.get_nowait()
-                                print(f"new time to capture is {new_time_interval}")
-                                packets = await packet_handler(client, new_time_interval=new_time_interval)
-                            else:
-                                packets = await packet_handler(client)
+                            # packets = None
+                            packets = await packet_handler(client)
+                            # if not cmd_queue.empty():
+                            #     cmd = cmd_queue.get_nowait()
+                            #     print(f"new time to capture is {new_time_interval}")
+                            #     packets = await packet_handler(client, new_time_interval=new_time_interval)
+                            # else:
+                            #     packets = await packet_handler(client)
                             save_img(packets)
                             print("Saving image")
                     except BleakError as e:

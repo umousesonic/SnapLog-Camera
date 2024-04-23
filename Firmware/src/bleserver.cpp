@@ -51,14 +51,22 @@ class MyCallbacks: public BLECharacteristicCallbacks {
 class MyIntervalCallbacks: public BLECharacteristicCallbacks {
     void onWrite(BLECharacteristic *pCharacteristic) override {
         if (pCharacteristic == pIntervalCharacteristic) {
-            uint32_t *receivedInterval = (uint32_t*)pCharacteristic->getData();
-            if (receivedInterval != NULL) {
-                wake_interval = *receivedInterval; // Set the global interval variable with the received value
+            cmdpkt_t *receivedCmd = (cmdpkt_t*)pCharacteristic->getData();
+            if (receivedCmd != NULL) {
+                if (receivedCmd->cmd == 0x1) {
+                    // Set interval
+                    wake_interval = receivedCmd->par; // Set the global interval variable with the received value
 
-                Serial.print("Received interval: ");
-                Serial.println(wake_interval);
-                pIntervalCharacteristic->setValue((uint8_t*)&wake_interval, (size_t)(4));
-                pIntervalCharacteristic->notify();
+                    Serial.print("Received interval: ");
+                    Serial.println(wake_interval);
+                    pIntervalCharacteristic->setValue((uint8_t*)&wake_interval, (size_t)(4));
+                    pIntervalCharacteristic->notify();
+                }
+                else if (receivedCmd->cmd == 0x2) {
+                    // Power down
+                    Serial.println("Received power off cmd");
+                    poweroff = true; 
+                }
             }
         }
     }
@@ -91,7 +99,6 @@ static void initializeBLE() {
 
     pRxCharacteristic->setCallbacks(new MyCallbacks());
     pIntervalCharacteristic->setCallbacks(new MyIntervalCallbacks()); // Set the correct callback for interval characteristic
-
     pIntervalCharacteristic->setValue((uint8_t*)&wake_interval, (size_t)(4));
     // pIntervalCharacteristic->notify();
     

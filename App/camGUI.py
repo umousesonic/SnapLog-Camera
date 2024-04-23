@@ -11,16 +11,28 @@ from kivy.uix.widget import Widget
 from kivy.uix.textinput import TextInput
 import os
 from datetime import datetime
-from share_queue import shared_queue        
+from share_queue import cmd_queue        
 import subprocess
 
 from threading import Thread
+from packet import Cmd, Cmdpacket
 
 class PictureCaptureApp(App):
 
     def build(self):
         # Overall vertical box
         main_layout = BoxLayout(orientation='vertical')
+
+        # Forth box: Horizontal box with one Button
+        buttons_layout = BoxLayout(orientation='horizontal', size_hint_y = 0.2)
+        power_off_button = Button(text='Power Off')
+        # TODO
+        # we need to create on click event
+        power_off_button.bind(on_press=self.power_off)
+
+        buttons_layout.add_widget(power_off_button)
+        main_layout.add_widget(buttons_layout)
+
 
         # Label for displaying validation messages
         self.message_label = Label(size_hint_y=None, font_size=20)
@@ -60,6 +72,7 @@ class PictureCaptureApp(App):
         buttons_layout.add_widget(set_time_button)
         buttons_layout.add_widget(create_video_button)
         main_layout.add_widget(buttons_layout)
+    
 
         return main_layout
 
@@ -70,10 +83,11 @@ class PictureCaptureApp(App):
         try:
             # Convert input text to integer
             user_input = int(self.timing_input_min.text)*60+int(self.timing_input_sec)
-            global shared_queue
+            global cmd_queue
             self.message_label.text = f"Setting capture time to {user_input} minutes in process..."
-            if not shared_queue.full():
-                shared_queue.put(user_input)
+            pkt = Cmdpacket(Cmd.SETINTERVAL, user_input)
+            if not cmd_queue.full():
+                cmd_queue.put(pkt)
         except ValueError:
             # Handle the case where the input is not an integer
             self.message_label.text = "Invalid input. Please enter a whole number."
@@ -95,9 +109,14 @@ class PictureCaptureApp(App):
 
 
         Thread(target=task).start()
+
+    def power_off(self, instance):
+        global cmd_queue
+        self.message_label.text = f"Set to poweroff."
+        pkt = Cmdpacket(Cmd.POWEROFF, Cmd.POWEROFF)
+        if not cmd_queue.full():
+            cmd_queue.put(pkt) 
         
-
-
 
 
 if __name__ == '__main__':
