@@ -13,14 +13,14 @@
 // put declarations here:
 Camera *cam;
 RTC_DATA_ATTR int bootCount = 0;
-uint32_t wake_interval = 20; 
+RTC_DATA_ATTR uint32_t wake_interval = 20; 
+bool poweroff = false;
 
 
 
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
-  // delay(1000); //Take some time to open up the Serial Monitor
 
 
   ++bootCount;
@@ -29,7 +29,7 @@ void setup() {
   esp_sleep_wakeup_cause_t wakeup_reason;
   wakeup_reason = esp_sleep_get_wakeup_cause();
   switch(wakeup_reason){
-    default : Serial.printf("Wakeup was not caused by deep sleep: %d\n",wakeup_reason); break;
+    default : Serial.printf("Wakeup was not caused by deep sleep: %d\n",wakeup_reason);
     case ESP_SLEEP_WAKEUP_TIMER : Serial.println("Wakeup caused by timer"); 
     esp_wifi_bt_power_domain_on();
     cam->poweron();
@@ -37,10 +37,14 @@ void setup() {
     cam->capture(process_function);
     break;
   }
-
-  esp_sleep_enable_timer_wakeup(wake_interval * uS_TO_S_FACTOR);
-  Serial.println("Setup ESP32 to sleep for every " + String(wake_interval) + " Seconds");
-  Serial.println("Going to sleep now");
+  if(!poweroff) {
+    esp_sleep_enable_timer_wakeup(wake_interval * uS_TO_S_FACTOR);
+    Serial.println("Setup ESP32 to sleep for every " + String(wake_interval) + " Seconds");
+    Serial.println("Going to sleep now");
+  }
+  else {
+    Serial.println("Shutting down");
+  }
   Serial.flush(); 
   cam->poweroff();
   esp_wifi_bt_power_domain_off();

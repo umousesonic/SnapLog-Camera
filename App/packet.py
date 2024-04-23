@@ -1,4 +1,5 @@
 from struct import Struct, unpack
+from enum import IntEnum
 
 class Datapacket:
     def __init__(self):
@@ -38,5 +39,26 @@ class Ackpacket:
     def get_bin(self):
         return self.fmt.pack(self.id)
     
+
+class Cmd(IntEnum):
+    SETINTERVAL = 1
+    POWEROFF = 2
+
+class Cmdpacket:
+    def __init__(self) -> None:
+        self.fmt = Struct('<II')
+        self.cmd = None
+        self.par = None
+
+    def __init__(self, cmd, par) -> None:
+        self.fmt = Struct('<II')
+        self.cmd = cmd
+        self.par = par
     
+    def from_bin(self, bin):
+        self.cmd, self.par = self.fmt.unpack(bin)
+    
+    def get_bin(self):
+        return self.fmt.pack(int(self.cmd), self.par)
+
 
