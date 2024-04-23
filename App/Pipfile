@@ -6,6 +6,8 @@ name = "pypi"
 [packages]
 bleak = "*"
 pillow = "*"
+kivy = "*"
+ffmpeg = "*"
 
 [dev-packages]
 

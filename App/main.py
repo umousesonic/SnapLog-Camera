@@ -28,7 +28,7 @@ def blefilter(device, data: AdvertisementData) -> bool:
     return False
 
 
-async def packet_handler(client, new_time_interval):
+async def packet_handler(client, new_time_interval=None):
     packets = []
     # service = client.get_service(CAMERA_SERVICE_UUID)
     image_char = None
@@ -44,11 +44,6 @@ async def packet_handler(client, new_time_interval):
             image_char = s.get_characteristic(IMAGE_CHAR_UUID)
             ack_char = s.get_characteristic(ACK_CHAR_UUID)
             time_char = s.get_characteristic(TIME_CHAR_UUID)
-        
-    if new_time_interval is not None:
-        # TODO
-        # Here you would normally set the time interval on the device
-        await client.write_gatt_char(time_char, struct.pack('<I', new_time_interval))
 
     while True:
         packet_bin = await client.read_gatt_char(image_char)
@@ -56,7 +51,7 @@ async def packet_handler(client, new_time_interval):
         # print(f"Data looks like {packet_bin}, len={len(packet_bin)}")
         packet.from_bin(packet_bin)                 
         packets.append(packet)
-        print(f"Got datapacket id={packet.id}")
+        print(f"Got datapacket id={packet.id}/{packet.totalpkts}", end='\r')
         ack = Ackpacket(packet.id)
         await client.write_gatt_char(ack_char, ack.get_bin())
         if packet.id == packet.totalpkts:
@@ -64,7 +59,11 @@ async def packet_handler(client, new_time_interval):
     
     await client.write_gatt_char(ack_char, ack.get_bin())
 
-
+    # Apply new settings
+    if new_time_interval is not None:
+        # TODO
+        # Here you would normally set the time interval on the device
+        await client.write_gatt_char(time_char, struct.pack('<I', new_time_interval))
 
     return packets
 
@@ -102,10 +101,13 @@ def bluetooth_task():
                         async with BleakClient(device) as client:
                             print("Connected to device.")
                             # Attempt to get the new time interval if available
+                            packets = None
                             if not shared_queue.empty():
                                 new_time_interval = shared_queue.get_nowait()
-                            print(f"new time to capture is {new_time_interval}")
-                            packets = await packet_handler(client, new_time_interval)
+                                print(f"new time to capture is {new_time_interval}")
+                                packets = await packet_handler(client, new_time_interval=new_time_interval)
+                            else:
+                                packets = await packet_handler(client)
                             save_img(packets)
                             print("Saving image")
                     except BleakError as e:
@@ -126,7 +128,7 @@ def main():
     app.run()
 
 if __name__ == '__main__':
-    ble_thread = threading.Thread(target=bluetooth_task)
+    ble_thread = threading.Thread(target=bluetooth_task, daemon=True)
     ble_thread.start()
 
     main()
