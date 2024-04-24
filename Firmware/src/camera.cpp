@@ -53,18 +53,6 @@ void Camera::init() {
 
     // Get sensor
     s = esp_camera_sensor_get();
-    if (s->id.PID == OV3660_PID) {
-        s->set_vflip(s, 1); // flip it back
-        s->set_brightness(s, 1); // up the brightness just a bit
-        s->set_saturation(s, -2); // lower the saturation
-    } else if (s->id.PID == OV2640_PID) {
-        s->set_vflip(s, 1); //flip it back
-    } else if (s->id.PID == GC0308_PID) {
-        s->set_hmirror(s, 0);
-    } else if (s->id.PID == GC032A_PID) {
-        s->set_vflip(s, 1);
-    }
-    // s->set_vflip(s, 1);
     // s->set_hmirror(s, 1);
 
     s->set_brightness(s, 0);     // -2 to 2
@@ -86,7 +74,7 @@ void Camera::init() {
     s->set_raw_gma(s, 1);        // 0 = disable , 1 = enable
     s->set_lenc(s, 1);           // 0 = disable , 1 = enable
     s->set_hmirror(s, 0);        // 0 = disable , 1 = enable
-    s->set_vflip(s, 0);          // 0 = disable , 1 = enable
+    s->set_vflip(s, 1);          // 0 = disable , 1 = enable
     s->set_dcw(s, 1);            // 0 = disable , 1 = enable
     s->set_colorbar(s, 0);       // 0 = disable , 1 = enable
 }
